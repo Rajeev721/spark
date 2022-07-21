@@ -1,0 +1,364 @@
+
+Resilient Distributed Data Set.
+
+==> two ways: by loading an external dataset, or 
+              by distributing a collection of objects (e.g., a list or set).
+
+Parallelized Collections:
+-------------------------
+
+val input = Array(1, 2, 3, 4, 5)
+val output = sc.parallelize(input)
+output.collect()
+
+(e.g. sc.parallelize(data, 10)). 
+----------------------------------------------------------------------
+External Datasets:
+-----------------
+
+Text file RDDs can be created using SparkContext’s textFile method. 
+
+message.txt
+----------
+welcome
+hadoop
+session
+
+message1.txt
+----------------
+welcome to hadoop session
+hadoop session
+spark session
+
+val inputFile = sc.textFile("/home/vagrant/demos/message.txt") // (url of the path or hdfs path)
+
+val input = sc.wholeTextFiles("C:/dataset")
+
+input.collect()
+
+RDD Operations:
+---------------
+
+RDDs support two types of operations: 
+
+ - transformations, which create a new dataset from an existing one,and 
+ - actions, which return a value to the driver program after running a computation on the dataset.
+
+
+1. All transformations in Spark are lazy, in that they do not compute their results right away. 
+
+2. Instead, they just remember the transformations applied to some base dataset (e.g. a file).
+
+3. The transformations are only computed when an action requires a result to be returned to the driver program.
+
+
+val lines = sc.textFile("C:/sample/message.txt") // dataset is not loaded in memory or otherwise acted on: lines is merely a pointer to the file.
+
+val lineLengths = lines.map(s => s.length)
+
+lineLengths.collect
+-------------------------------------------------------------------------------------------------
+RDDs are created over a set of transformations => it logs those transformations,rather than actual data (lineage graph).
+
+Failure ==> some partition of RDD ==> recomputes the transformation on that partition in lineage to achieve the same computation, rather than doing data replication across multiple nodes.
+
+This characteristic is biggest benefit of RDD , because it saves a lot of efforts in data management and replication and thus achieves faster computations.
+-------------------------------------------------------------------------------------------------
+At high level, when any action is called on the RDD, Spark creates the DAG and submits to the DAG scheduler.
+
+ -- The DAG scheduler divides operators into stages of tasks. 
+ -- A stage is comprised of tasks based on partitions of the input data.
+ -- The final result of a DAG scheduler is a set of stages.
+ -- The Stages are passed on to the Task Scheduler.
+ -- The task scheduler launches tasks via cluster manager.(Spark Standalone/Yarn/Mesos). 
+ -- The Worker executes the tasks on the Slave.
+------------------------------------
+how Spark builds the DAG ?
+
+At high level, there are two transformations that can be applied onto the RDDs, namely narrow transformation and wide transformation. 
+
+Narrow transformation - doesn't require the data to be shuffled across the partitions. for example, Map, filter and etc..
+
+wide transformation - requires the data to be shuffled for example, reduceByKey and etc..
+
+-----------------------------------
+log.txt:
+
+INFO I am Info message
+WARN I am a Warn message
+INFO I am another Info message
+
+
+val input = sc.textFile("C:/sample/log.txt")
+
+val splitedLines = input.map(line => line.split(" ")).map(words => (words(0), 1)).reduceByKey {(a,b) => a + b}
+
+
+splitedLines.toDebugString // to display lineage of an RDD.
+
+----------------------------------
+
+
+The DAG scheduler splits the graph into multiple stages, the stages are created based on the transformations.
+
+The narrow transformations (map) will be grouped (pipe-lined) together into a single stage. 
+
+The wide transformation ==> stage 2 ==> reduceby key.
+
+----------------------------------------------
+
+The DAG scheduler then submit the stages into the task scheduler. 
+
+The number of tasks submitted depends on the number of partitions present in the textFile.
+
+Fox example consider we have 4 partitions ==> there will be 4 set of tasks created and submitted in parallel.
+--------------------------------------------
+
+Transformations:
+---------------
+
+1. map(func):
+
+val input = sc.parallelize(List(1, 2, 3, 4))
+
+val result = input.map(x => x * x)
+
+result.collect()
+
+result.collect().mkString(",")
+
+2. flatMap().
+------------
+flatMap() in Scala, splitting lines into multiple words
+
+val linesInput = sc.parallelize(List("hello world", "hi"))
+
+val mapoutput = linesInput.map(line => line.split(" "))
+
+mapoutput.collect
+
+val flatmapoutput = linesInput.flatMap(line => line.split(" "))
+
+flatmapoutput.collect
+
+
+3. filter(func)	
+---------------
+
+val fileInput = sc.textFile("/home/vagrant/demos/message.txt")
+
+val result = fileInput.filter(line => line.contains("spark"))
+
+result.first()
+-------------------------------------------------------------------------
+def toUpper(s:String):String = {s.toUpperCase}
+
+val input = sc.textFile("  ")
+
+input.map(toUpper).collect
+
+Named function
+-------
+Anonymous function
+
+val input = sc.textFile("  ")
+
+input.map(line => line.toUpperCase()).collect
+
+----------------------------------------------------------------------------
+
+Pair RDD:
+
+(key,value)
+
+val input = sc.textFile("/home/vagrant/demos/Baby_Names.csv").map(line => line.split(",")).map(n =>(n(1),n(3)))
+
+input.saveAsTextFile(""/home/vagrant/demos/Cloudera/results")
+
+
+Working with key-value pair (Transformation):
+---------------------------------------------
+
+// To Load and Split
+
+val input = sc.textFile("/home/vagrant/demos/Baby_Names.csv")
+
+val split = input.map(line => line.split(","))
+
+1. groupByKey (group names by country):
+-------------------------------------
+
+When called on a dataset of (K, V) pairs, returns a dataset of (K, Iterable<V>) pairs.
+
+james,ind
+jack,us
+josh,ind
+sam,us
+
+ind, (james,josh)
+us,(jack,sam)
+
+val interestedField = split.map(f => (f(2),f(1)))
+
+interestedField.groupByKey.take(2).foreach(print)
+
+2. reduceByKey:
+---------------
+When called on a dataset of (K, V) pairs, returns a dataset of (K, V) pairs where the values for each key are aggregated using the given reduce function func, which must be of type (V,V) => V.
+
+// sum the name counts 
+
+val input = sc.textFile("/home/vagrant/demos/Baby_Names.csv")
+
+val filterRows = input.filter(line => !line.contains("Count")).map(line => line.split(","))
+
+val result = filterRows.map(f => (f(1),f(4).toInt)).reduceByKey((v1,v2) => v1 + v2)
+
+result.take(2).foreach(println)
+
+3. sortBykey:
+----------
+When called on a dataset of (K, V) pairs where K implements Ordered, returns a dataset of (K, V) pairs sorted by keys in ascending or descending order, as specified in the boolean ascending argument.
+
+val input = sc.textFile("/home/vagrant/demos/Baby_Names.csv")
+
+val filterRows = input.filter(line => !line.contains("Count")).map(line => line.split(","))
+
+filterRows.map ( f => (f(1), f(4))).sortByKey().take(5).foreach (println)
+
+filterRows.map ( n => (f(1), f(4))).sortByKey(false).take(10).foreach (println) // opposite order
+
+-----------------------------------------------------------------------------------------------
+Spark Wordcount:
+----------------
+sc.textFile("/home/vagrant/demos/message1.txt").flatMap(line => line.split(" ")).map(word => (word,1)).reduceByKey(_ + _).collect()
+-----------------------------------------
+start-dfs.sh
+start-yarn.sh
+start-master.sh
+start-slave.sh spark://master:7077
+
+Actions:
+--------
+
+1. reduce(func)
+------------
+
+a+b=b+a
+
+a+(b+c)=(a+b)+c
+
+val input = sc.parallelize(1 to 9)
+
+input.reduce((t1,t2) => t1 + t2)
+
+
+2. collect(func)
+---------------
+
+sc.parallelize(List(5,6,7)).map(x=>List(x,x,x)).collect
+
+3. count() 
+---------
+val input = sc.parallelize(List("apple", "banana", "pineapple"))
+
+input.count
+
+4. first() 
+--------
+val input = sc.parallelize(List("apple", "banana", "pineapple"))
+
+input.first
+
+5. take(n)
+--------
+
+val input= sc.parallelize(List("apple", "banana", "pineapple"))
+input.take(2)
+
+take(1) ==> first
+
+----------------------------------------------------------------------------
+
+mapValues is only applicable for PairRDDs.
+
+In that case, mapValues operates on the value only (the second part of the tuple), while map operates on the entire record (tuple of key and value).
+
+val map = Map(1 -> "apple",2 -> "banana",3 -> "orange")
+
+map.map { case(key,value) => (key + 100,value capitalize) }
+
+map.mapValues(_ capitalize)
+-----------------------------------------------------------------
+
+val sampleRDD = sc.parallelize(Array((1,2),(3,4),(3,6)))
+
+val rdd2 = sampleRDD.mapValues(x => x to 5)
+
+val rdd3 = rdd2.flatMapValues(x => x)
+-------------------------------------------------------------
+
+Accumulators:
+
+Accumulators are variables that are used for aggregating information across the executors.
+
+implementing counters or sums:
+
+
+val ac = sc.accumulator(0)
+
+sc.parallelize(Array(1, 2, 3, 4)).foreach(x => ac.add(x))
+
+ac.value
+--------------------------------------------------------------------
+
+Broadcast variables:
+
+Broadcast variables allow the programmer to keep a read-only variable cached on each machine rather than shipping a copy of it with tasks.
+
+
+Sending a value from Driver to Worker Nodes without using Broadcast variable:
+--------------------------------------------------------------------------
+
+val input = sc.parallelize(List(1, 2, 3))
+
+val y = 2
+
+val added = input.map( x => x + y)
+
+added.foreach(println)
+
+ 
+//** Local variable is once again transferred to worked nodes for the next operation
+ 
+val multiplied = input.map( x => x * y)
+
+ 
+multiplied.foreach(println)
+
+ 
+Sending a read-only value using Broadcast variable. Can be used to send large read-only values to all worker nodes efficiently:
+---------------------------------------------------------------------------------------------------------------
+ 
+val broadcastVar = sc.broadcast(2)
+
+ 
+val added = input.map(x => broadcastVar.value + x)
+
+ 
+added.foreach(println)
+ 
+val multiplied = input.map(x => broadcastVar.value * x)
+ 
+multiplied.foreach(println)
+
+--------------------------------------------------------------------
+
+
+
+
+
+
+
+
+

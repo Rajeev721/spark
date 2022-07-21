@@ -1,0 +1,90 @@
+What is Spark?
+-------------
+Open source big data processing framework built around speed, ease of use, and sophisticated analytics.
+
+Developed in 2009 in UC Berkeley’s AMP Lab, and open sourced in 2010 as an Apache project.
+
+Spark has several advantages.
+	Unified framework to manage big data processing requirements.
+	Applications in Hadoop clusters to run up to 100 times faster in memory and 10 times faster even when running on disk.
+	APIs in Java, Scala, or Python. 
+	Built-in set of over 80 high-level operators. And you can use it interactively to query data within the shell.
+Written in Scala
+
+Spark Shell
+	Interactive  - for learning or data exploration
+
+Spark Applications
+	For large scale and data processing.
+
+--------------------------------------------------
+How SPark works = > Figure
+
+1.At a high level, every Spark application consists of a driver program that launches various parallel operations on a cluster.
+
+2.The driver program contains your application’s main function and defines distributed datasets on the cluster, then applies operations to them.
+
+3.Here the driver program was the Spark shell itself, and you could just type in the operations you wanted to run.
+
+4.Driver programs access Spark through a SparkContext object, which represents a connection to a computing cluster.
+
+5.In the shell, a SparkContext is automatically created for you as the variable called sc. 
+
+Call sc.textFile() to create an RDD representing the lines of text in a file. We can then run various operations on these lines, such as count().
+
+6. To run these operations, driver programs typically manage a number of nodes called executors.
+
+7. For example, if we were running the count() operation on a cluster, different machines might count lines in different ranges of the file. 
+------------------------------------------------
+RDD (resilient distributed dataset):
+
+1. Simply a distributed collection of elements.
+
+2. In Spark all work is expressed as either creating new RDDs, transforming existing RDDs, or calling operations on RDDs to compute a result.
+
+3. Under the hood, Spark automatically distributes the data contained in RDDs across your cluster and parallelizes the operations you perform on them.
+
+4. An RDD in Spark is simply an immutable distributed collection of objects.
+
+5. Each RDD is split into multiple partitions, which may be computed on different nodes of the cluster.
+
+6. RDDs can contain any type of Python, Java, or Scala objects, including user defined classes.
+
+Users create RDDs in two ways: by loading an external dataset, or by distributing a collection of objects (e.g., a list or set) in their driver program.
+
+RDDs = > distributed abstraction, support parallel computation of data and hence are also referred as read-only, partitioned collection of records.
+
+RDD has metadata about how it was dervied from other datasets to compute its partitions from data in stable storage (HDFS, FileSystem, databases, other RDDs etc.).
+
+This makes RDDs resilient as they can always be recreated in case of failures. 
+
+Datasets which a RDD is derived from, is referred as lineage.
+ 
+
+--------------------------------------
+
+Types of RDDs
+
+Since Apache Spark is developed using Scala language, RDDs are modeled as Scala types (classes). Apache Spark provides apis for mainly four programming languages - Scala, Java, Python and R.
+
+
+RDD: This is base or main type for all RDDs in Apache Spark and defines characteristics methods.
+
+JavaRDD: This is main class for Java RDDs. Spark applications written in Java should deal with this class as it provides many utilites (such as sample, union, filter, map, coalesce(reducing the number of partitions), etc.) to make Java programming easier. JavaRDD unlike others does not extend RDD and instead is a wrapper on it. It just delegates the calls to Scala RDD, wraps the result into JavaRDD and finally return it to the caller.
+
+PythonRDD: This RDD class extends from RDD class of Scala and represent RDDs in Python language.
+
+RRDD: This class represents RDDs in R language and extends from RDD class of Scala. 
+
+RDDs in Java:
+------------
+
+JavaRDD: This represents a general RDD in Java and defines operations for manipulating RDDs. This class delegates all the calls to Scala RDD and wraps returned RDDs to JavaRDD before returning it to client.
+
+It is very important to note that RDD classes should not be instantiated directly and instead should be created using SparkContext (JavaSparkContext for Java) class to link it to Apache Spark cluster.
+-------------------------------------
+
+
+
+
+

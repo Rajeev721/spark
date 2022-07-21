@@ -1,0 +1,2 @@
+ID_NUM,SOURCE_PATH,SOURCE_FILE_1,SOURCE_FILE_2,TARGET_FILE,DATABASE_N,CONNECTION_STRING,DRIVER,SOURCE_TABLES,TARGET_TABLE,TYPE_OF_JOIN,JOIN_COLUMN,USER_NAME_V,PASSWORD_V
+1,D:\Learning\DataSet\iris\merge,iris_merge1.csv,iris_merge2.csv,sample,rajeev_sql_db,jdbc:sqlserver://rajeev-sql-server.database.windows.net:1433;database=rajeev_sql_db;,com.microsoft.sqlserver.jdbc.SQLServerDriver,employee,SalesLT.iris_data,inner,ID,rajeev,Mfu87@lqp0
