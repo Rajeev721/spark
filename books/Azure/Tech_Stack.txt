@@ -1,0 +1,38 @@
+Python
+PySpark
+===================================================
+ADLS
+ADF
+DataBricks
+Azure DataStorage
+Azure SQL DB
+Azure Database for PostgreSQL servers
+Azure Database for MySQL servers
+Azure Cosmos DB
+===================================================
+Azure Function Apps
+Azure Logic Apps​
+Azure Event Grid
+Azure Purview
+===================================================
+App Service
+Azure Active Directory
+Azure Key Vault
+===================================================
+HD Insight
+Azure Synapse Analytics
+Azure Analysis Server​
+===================================================
+Azure DevOps
+
+===================================================
+Kafka
+Scala
+Impala
+Pig
+MapReduce
+Attinuity
+HBase
+MongoDB
+Teradata
+===================================================
