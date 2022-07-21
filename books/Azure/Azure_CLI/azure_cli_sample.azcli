@@ -1,5 +1,0 @@
-# az account get-access-token --subscription 0c93ece2-2ec8-4b64-b761-bbf337dd3dad
-
-az account set --subscription 0c93ece2-2ec8-4b64-b761-bbf337dd3dad
-
-az ad sp create-for-rbac

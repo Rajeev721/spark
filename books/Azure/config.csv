@@ -1,3 +1,0 @@
-ID,FILE_NAME,BLOBPATH,CONTAINER,SOURCE_PATH,RAW_PATH,PRIMARY_PATH,FEATURE_PATH,TABLE
-1,userdata1.parquet,/blobServices/default/containers/dpmsmoketestcontainer/blobs/data/,dpmsmoketestcontainer,raw/source,raw,primary,feature
-2,userdata2.parquet,/blobServices/default/containers/dpmsmoketestcontainer/blobs/data/,dpmsmoketestcontainer,raw/source,raw,primary,feature
